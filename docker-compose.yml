@@ -1,0 +1,52 @@
+version: "3.8" # Використовуємо новішу версію специфікації
+services:
+  # 1. Nginx (Зворотний проксі)
+  nginx:
+    image: nginx:alpine
+    container_name: main-nginx-proxy
+    restart: unless-stopped
+    ports:
+      - "8000:80" # Зовнішній порт 8000 -> Внутрішній порт 80 Nginx
+    volumes:
+      # Монтуємо конфігурацію Nginx
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+      # Монтуємо код Laravel для доступу до статики (якщо потрібно Nginx)
+      # Важливо: шлях '/app/public' має відповідати PHP-контейнеру
+      - ./php-app/public:/app/public 
+    depends_on:
+      - php-app
+      - node-app
+      - python-app
+
+  # 2. Node.js (Express.js)
+  node-app:
+    image: node:alpine
+    container_name: node-express-app
+    restart: unless-stopped
+    working_dir: /home/app # Робоча директорія всередині
+    volumes:
+      - ./node-app:/home/app # Монтуємо локальну папку з кодом
+    # Запускаємо через npm start, який використовує server.js
+    command: ["npm", "run", "start"] 
+
+  # 3. PHP (Laravel)
+  php-app:
+    # Використовуємо стандартний FPM образ
+    image: php:8.2-fpm-alpine 
+    container_name: php-laravel-app
+    restart: unless-stopped
+    working_dir: /app # Робоча директорія всередині
+    volumes:
+      - ./php-app:/app # Монтуємо локальну папку з кодом
+    # Порт 9000 (PHP-FPM) не публікуємо назовні
+
+  # 4. Python (Django)
+  python-app:
+    build: ./python-app # Збираємо з локального Dockerfile
+    container_name: python-django-app
+    restart: unless-stopped
+    working_dir: /app # Робоча директорія всередині
+    volumes:
+      - ./python-app:/app # Монтуємо локальну папку з кодом
+    # Порт 8002 (Django dev server) не публікуємо назовні
+    # Команда запуску береться з CMD у Dockerfile
