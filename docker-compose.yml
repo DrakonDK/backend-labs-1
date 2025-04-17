@@ -1,4 +1,4 @@
-version: "3.8" # Використовуємо новішу версію специфікації
+version: "3.8"
 services:
   # 1. Nginx (Зворотний проксі)
   nginx:
@@ -11,7 +11,6 @@ services:
       # Монтуємо конфігурацію Nginx
       - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
       # Монтуємо код Laravel для доступу до статики (якщо потрібно Nginx)
-      # Важливо: шлях '/app/public' має відповідати PHP-контейнеру
       - ./php-app/public:/app/public 
     depends_on:
       - php-app
@@ -38,7 +37,6 @@ services:
     working_dir: /app # Робоча директорія всередині
     volumes:
       - ./php-app:/app # Монтуємо локальну папку з кодом
-    # Порт 9000 (PHP-FPM) не публікуємо назовні
 
   # 4. Python (Django)
   python-app:
@@ -48,5 +46,3 @@ services:
     working_dir: /app # Робоча директорія всередині
     volumes:
       - ./python-app:/app # Монтуємо локальну папку з кодом
-    # Порт 8002 (Django dev server) не публікуємо назовні
-    # Команда запуску береться з CMD у Dockerfile
